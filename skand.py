@@ -67,7 +67,7 @@ def main():
     if args.file:
         process_csv(args.file, args.threshold)
     else:
-        print(Ascii())
+        Ascii()
         parser.print_help()
 
 if __name__ == "__main__":
