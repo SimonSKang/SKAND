@@ -77,3 +77,4 @@ if __name__ == "__main__":
 # Future improvements: 
 # Detect day / time or -c arg for specific column
 # time threshold range e.g. 2024-01-01 - 2024-01-30
+# include directory instead of single file (-d)
