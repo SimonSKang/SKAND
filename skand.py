@@ -9,27 +9,42 @@ def convert_datetime(column):
     #Converts datetime strings to objects
     return pd.to_datetime(column, errors='coerce', dayfirst=True) # ensures the format is dd/mm/yyyy before converting
 
+def find_time_column(df, possible_time_columns):
+    for col in possible_time_columns:
+        if col in df.columns:
+            return col
+    raise ValueError("None of the possible time columns found in the DataFrame.")
+
 def process_csv(file_path, threshold_date=None):
-    # Read CSV file
-    df = pd.read_csv(file_path)
-    # print(df.head())  # Check the original data
-    
-    # Convert the first column (assumed to contain datetime strings) to datetime format
-    # -c arg to specifiy what column it uses, or it should auto find the column using the heading value?
-    df.iloc[:, 0] = convert_datetime(df.iloc[:, 0])
-    # print(df.head())  # Check after conversion
+    try:
+        # Read the CSV file
+        df = pd.read_csv(file_path)
+        
+        # List of possible column names for the time column
+        possible_time_columns = ['Time', 'Timestamp', 'Date', 'Datetime']
+        
+        # Find the actual time column
+        time_column = find_time_column(df, possible_time_columns)
+        
+        # Convert the time column to datetime format
+        df[time_column] = convert_datetime(df[time_column])
     
     # Filter DataFrame if time threshold argument is provided
-    if threshold_date:
-        threshold_datetime = pd.to_datetime(threshold_date, format='%Y-%m-%d')
-        df['Time'] = pd.to_datetime(df['Time'], dayfirst=True)
-        # Filter the DataFrame to include rows on or after the threshold date.
-        df = df[df['Time'] >= threshold_datetime]
-     # Convert the DataFrame to an Excel file for formatting purposes (need to work on CSV conversion)
-        base_name = os.path.splitext(file_path)[0]
-        output_xlsx_file = f"{base_name}_CLEAN.xlsx" # saves with appendix (maybe overwrite?)
-        wb = Workbook()
-        ws = wb.active
+        if threshold_date:
+                threshold_datetime = pd.to_datetime(threshold_date, infer_datetime_format=True)
+                # Filter the DataFrame to include rows on or after the threshold date
+                df = df[df[time_column] >= threshold_datetime]
+         # Convert the DataFrame to an Excel file for formatting purposes (need to work on CSV conversion)
+                base_name = os.path.splitext(file_path)[0]
+                output_xlsx_file = f"{base_name}_CLEAN.xlsx" # saves with appendix (maybe overwrite?)
+                wb = Workbook()
+                ws = wb.active
+    except ValueError as e:
+        print(f"Column error: {e}")
+    except Exception as e:
+        print(f"Error processing file: {e}")
+
+
 
     # Create a named style for datetime cells
     date_time_style = NamedStyle(name='datetime', number_format='YYYY-MM-DD HH:MM:SS')
